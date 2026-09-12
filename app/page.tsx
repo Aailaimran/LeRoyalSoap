@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { getProductUrl, money, products, type Product, whatsappUrl } from '@/lib/products'
 
 const faqs = [
@@ -19,6 +19,23 @@ export default function Page() {
   const [mobileOpen, setMobileOpen] = useState(false)
   const [toast, setToast] = useState('')
   const [openFaq, setOpenFaq] = useState<number | null>(null)
+  const [checkoutOpen, setCheckoutOpen] = useState(false)
+  const [orderSubmitted, setOrderSubmitted] = useState(false)
+
+  useEffect(() => {
+    const saved = window.localStorage.getItem('leroyal_cart')
+    if (!saved) return
+    try {
+      const parsed = JSON.parse(saved) as CartItem[]
+      setCart(parsed.filter((item) => products.some((product) => product.id === item.product.id)))
+    } catch {
+      window.localStorage.removeItem('leroyal_cart')
+    }
+  }, [])
+
+  useEffect(() => {
+    window.localStorage.setItem('leroyal_cart', JSON.stringify(cart))
+  }, [cart])
 
   const cartCount = useMemo(() => cart.reduce((sum, item) => sum + item.quantity, 0), [cart])
   const subtotal = useMemo(() => cart.reduce((sum, item) => sum + item.product.price * item.quantity, 0), [cart])
@@ -76,7 +93,8 @@ export default function Page() {
 
       {toast && <div className="toast" role="status">{toast}<span>✓</span></div>}
       {drawerOpen && <div className="drawer-overlay" onClick={() => setDrawerOpen(false)} />}
-      <aside className={`cart-drawer ${drawerOpen ? 'is-open' : ''}`} aria-label="Shopping cart"><div className="drawer-header"><div><p className="eyebrow">YOUR SELECTION</p><h2>Your cart <span>({cartCount})</span></h2></div><button onClick={() => setDrawerOpen(false)} aria-label="Close cart">×</button></div>{cart.length === 0 ? <div className="empty-cart"><div className="empty-mark">✦</div><h3>Your cart is empty.</h3><p>Find a soap to make your next ritual feel special.</p><button className="button button-dark" onClick={() => { setDrawerOpen(false); document.querySelector('#products')?.scrollIntoView({ behavior: 'smooth' }) }}>Continue shopping</button></div> : <><div className="cart-items">{cart.map(({ product, quantity }) => <div className="cart-item" key={product.id}><img src={product.image} alt="" /><div><h3>{product.displayName}</h3><p>{money(product.price)}</p><div className="stepper"><button onClick={() => changeQuantity(product.id, -1)} aria-label={`Decrease ${product.displayName}`}>−</button><span>{quantity}</span><button onClick={() => changeQuantity(product.id, 1)} aria-label={`Increase ${product.displayName}`}>+</button></div></div><strong>{money(product.price * quantity)}</strong></div>)}</div><div className="drawer-footer"><div><span>Subtotal</span><strong>{money(subtotal)}</strong></div><p>{shipping === 0 ? 'Complimentary delivery applied.' : 'Delivery calculated at checkout.'}</p><button className="button button-dark checkout-button" onClick={() => setToast('Checkout is ready to connect when your order endpoint is enabled.')}>Proceed to checkout <span>↗</span></button><button className="clear-button" onClick={() => setCart([])}>Clear cart</button></div></>}</aside>
+      <aside className={`cart-drawer ${drawerOpen ? 'is-open' : ''}`} aria-label="Shopping cart"><div className="drawer-header"><div><p className="eyebrow">YOUR SELECTION</p><h2>Your cart <span>({cartCount})</span></h2></div><button onClick={() => setDrawerOpen(false)} aria-label="Close cart">×</button></div>{cart.length === 0 ? <div className="empty-cart"><div className="empty-mark">✦</div><h3>Your cart is empty.</h3><p>Find a soap to make your next ritual feel special.</p><button className="button button-dark" onClick={() => { setDrawerOpen(false); document.querySelector('#products')?.scrollIntoView({ behavior: 'smooth' }) }}>Continue shopping</button></div> : <><div className="cart-items">{cart.map(({ product, quantity }) => <div className="cart-item" key={product.id}><img src={product.image} alt="" /><div><h3>{product.displayName}</h3><p>{money(product.price)}</p><div className="stepper"><button onClick={() => changeQuantity(product.id, -1)} aria-label={`Decrease ${product.displayName}`}>−</button><span>{quantity}</span><button onClick={() => changeQuantity(product.id, 1)} aria-label={`Increase ${product.displayName}`}>+</button></div></div><strong>{money(product.price * quantity)}</strong></div>)}</div><div className="drawer-footer"><div><span>Subtotal</span><strong>{money(subtotal)}</strong></div><p>{shipping === 0 ? 'Complimentary delivery applied.' : 'Delivery calculated at checkout.'}</p><button className="button button-dark checkout-button" onClick={() => { setDrawerOpen(false); setCheckoutOpen(true) }}>Proceed to checkout <span>↗</span></button><button className="clear-button" onClick={() => setCart([])}>Clear cart</button></div></>}</aside>
+      {checkoutOpen && <div className="checkout-overlay" role="dialog" aria-modal="true" aria-labelledby="checkout-title"><div className="checkout-modal"><button className="checkout-close" onClick={() => setCheckoutOpen(false)} aria-label="Close checkout">×</button>{orderSubmitted ? <div className="checkout-success"><p className="eyebrow">ORDER RECEIVED</p><h2 id="checkout-title">Thank you for choosing Le Royal.</h2><p>Your order request has been prepared. We will contact you shortly to confirm delivery and Cash on Delivery details.</p><button className="button button-dark" onClick={() => { setCheckoutOpen(false); setOrderSubmitted(false); setCart([]) }}>Back to home</button></div> : <form onSubmit={(event) => { event.preventDefault(); setOrderSubmitted(true) }}><p className="eyebrow">COMPLETE YOUR ORDER</p><h2 id="checkout-title">Your ritual, delivered.</h2><div className="checkout-fields"><label>Full name<input required name="name" /></label><label>Email<input required type="email" name="email" /></label><label>Phone<input required type="tel" name="phone" /></label><label>City<input required name="city" /></label><label className="field-wide">Full address<textarea required name="address" rows={3} /></label><label>Postal code<input name="postalCode" /></label><label>Payment method<select name="payment"><option>Cash on Delivery</option></select></label></div><div className="checkout-summary"><span>{cartCount} item{cartCount === 1 ? '' : 's'}</span><strong>{money(subtotal + shipping)}</strong></div><button className="button button-dark" type="submit">Place order <span>↗</span></button><p className="checkout-note">Order requests are confirmed by WhatsApp until email service is connected.</p></form>}</div></div>}
     </main>
   )
 }
