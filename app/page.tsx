@@ -1,18 +1,7 @@
 'use client'
 
 import { useMemo, useState } from 'react'
-
-const products = [
-  { id: 'black-velvet', name: 'Le Royal Charcoal', displayName: 'Black Velvet', category: 'Charcoal Soap', price: 1500, description: 'Charcoal-inspired cleansing soap for a fresh everyday routine.', image: 'https://images.unsplash.com/photo-1607006483225-5c98a2c0c5bd?auto=format&fit=crop&w=900&q=85', tone: 'dark' },
-  { id: 'rice-glow', name: 'Le Royal Rice', displayName: 'Rice Glow', category: 'Rice Soap', price: 1500, description: 'Gentle rice-inspired care for smooth, soft-feeling skin.', image: 'https://images.unsplash.com/photo-1608181831718-c9a9c6d7b3e1?auto=format&fit=crop&w=900&q=85', tone: 'rice' },
-  { id: 'herbal-pure', name: 'Le Royal Neem', displayName: 'Herbal Pure', category: 'Neem Soap', price: 1500, description: 'A clean daily ritual with a fresh, botanical character.', image: 'https://images.unsplash.com/photo-1605264965141-3b7c8b54bfa0?auto=format&fit=crop&w=900&q=85', tone: 'green' },
-  { id: 'beet-glow', name: 'Le Royal Beetroot', displayName: 'Beet Glow', category: 'Beetroot Soap', price: 1500, description: 'A soft, fresh cleanse with a naturally vibrant spirit.', image: 'https://images.unsplash.com/photo-1607006483225-5c98a2c0c5bd?auto=format&fit=crop&w=900&q=85', tone: 'rose' },
-  { id: 'mocha-bliss', name: 'Le Royal Coffee', displayName: 'Mocha Bliss', category: 'Coffee Soap', price: 1500, description: 'Rich, energizing lather for a beautifully fresh start.', image: 'https://images.unsplash.com/photo-1617038220319-276d3cfab638?auto=format&fit=crop&w=900&q=85', tone: 'coffee' },
-  { id: 'blue-bliss', name: 'Le Royal Moroccan Blue', displayName: 'Blue Bliss', category: 'Moroccan Soap', price: 1500, description: 'Smooth, cool character for a comfortable daily wash.', image: 'https://images.unsplash.com/photo-1605264965141-3b7c8b54bfa0?auto=format&fit=crop&w=900&q=85', tone: 'blue' },
-  { id: 'silk-grain', name: 'Le Royal Flax & Rice', displayName: 'Silk Grain', category: 'Flax & Rice Soap', price: 1500, description: 'A gentle blend that leaves skin soft, clean and fresh.', image: 'https://images.unsplash.com/photo-1608181831718-c9a9c6d7b3e1?auto=format&fit=crop&w=900&q=85', tone: 'wheat' },
-  { id: 'tender-touch', name: 'Le Royal Baby', displayName: 'Tender Touch', category: 'Baby Soap', price: 1500, description: 'Mild, soft lather made for delicate everyday care.', image: 'https://images.unsplash.com/photo-1611930022073-b7a4ba5fcccd?auto=format&fit=crop&w=900&q=85', tone: 'cream' },
-  { id: 'citrus-herb', name: 'Le Royal Lemon Neem', displayName: 'Citrus Herb', category: 'Lemon Neem Soap', price: 1500, description: 'A bright lemon-and-neem blend for a refreshing wash.', image: 'https://images.unsplash.com/photo-1605264965141-3b7c8b54bfa0?auto=format&fit=crop&w=900&q=85', tone: 'citrus' },
-]
+import { getProductUrl, money, products, type Product, whatsappUrl } from '@/lib/products'
 
 const faqs = [
   ['How do I choose the right soap?', 'Start with the ritual you want to create. Charcoal and neem feel fresh and purifying, while rice, baby and flax blends are gentle everyday choices.'],
@@ -22,9 +11,7 @@ const faqs = [
   ['Can I order through WhatsApp?', 'Yes. Send us your chosen soaps and delivery details through WhatsApp and our team will help you complete the order.'],
 ]
 
-const money = (amount: number) => `Rs. ${amount.toLocaleString('en-PK')}`
-
-type CartItem = { product: (typeof products)[number]; quantity: number }
+type CartItem = { product: Product; quantity: number }
 
 export default function Page() {
   const [cart, setCart] = useState<CartItem[]>([])
@@ -75,7 +62,7 @@ export default function Page() {
 
       <section className="marquee" aria-label="Brand values"><span>SMALL BATCH</span><i>✦</i><span>EVERYDAY CARE</span><i>✦</i><span>INGREDIENT INSPIRED</span><i>✦</i><span>SMALL BATCH</span></section>
 
-      <section className="collection section-wrap" id="products"><div className="section-heading"><div><p className="eyebrow">A SOAP FOR EVERY RITUAL</p><h2>Our collection</h2></div><p>Discover considered blends for clean, comfortable skin and a fresher everyday start.</p></div><div className="product-grid">{products.map((product, index) => <article className="product-card" key={product.id}><a className={`product-image ${product.tone}`} href={`#${product.id}`} aria-label={`View details for ${product.displayName}`}><img src={product.image} alt={`${product.displayName} handmade soap`} loading={index > 2 ? 'lazy' : 'eager'} /><span className="product-number">0{index + 1}</span></a><div className="product-info"><p className="product-category">{product.category}</p><h3>{product.displayName}</h3><p>{product.description}</p><div className="product-footer"><strong>{money(product.price)}</strong><button onClick={() => addToCart(product)}>Add to cart <span>+</span></button></div></div></article>)}</div></section>
+      <section className="collection section-wrap" id="products"><div className="section-heading"><div><p className="eyebrow">A SOAP FOR EVERY RITUAL</p><h2>Our collection</h2></div><p>Discover considered blends for clean, comfortable skin and a fresher everyday start.</p></div><div className="product-grid">{products.map((product, index) => <article className="product-card" key={product.id}><a className={`product-image ${product.tone}`} href={getProductUrl(product)} aria-label={`View details for ${product.displayName}`}><img src={product.image} alt={`${product.displayName} handmade soap`} loading={index > 2 ? 'lazy' : 'eager'} /><span className="product-number">0{index + 1}</span></a><div className="product-info"><p className="product-category">{product.category}</p><h3>{product.displayName}</h3><p>{product.description}</p><div className="product-footer"><strong>{money(product.price)}</strong><button onClick={() => addToCart(product)}>Add to cart <span>+</span></button></div></div></article>)}</div></section>
 
       <section className="why-section"><div className="section-wrap"><div className="section-heading centered"><div><p className="eyebrow">THE LE ROYAL WAY</p><h2>Simple care, <em>well considered.</em></h2></div></div><div className="benefit-grid"><div><span>01</span><h3>Thoughtfully selected</h3><p>Ingredient-inspired blends chosen for a calm, comfortable cleanse.</p></div><div><span>02</span><h3>Everyday gentle care</h3><p>Good soap should be a pleasure to use, morning after morning.</p></div><div><span>03</span><h3>Distinctive rituals</h3><p>From charcoal to citrus, find a bar with its own character.</p></div><div><span>04</span><h3>Fresh experience</h3><p>Clean, refined and made to leave you feeling renewed.</p></div></div></div></section>
 
