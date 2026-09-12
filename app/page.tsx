@@ -55,7 +55,7 @@ export default function Page() {
     <main className="site-shell">
       <div className="announcement">Complimentary delivery on orders above Rs. 3,000 <span>·</span> Made for everyday rituals</div>
       <header className="site-header">
-        <a className="brand" href="#top" aria-label="Le Royal home"><span>LE ROYAL</span><small>HANDMADE SOAP</small></a>
+        <a className="brand brand-logo" href="#top" aria-label="Le Royal home"><img src="/logo.jpeg" alt="Le Royal Handmade Soap" /></a>
         <nav className={`main-nav ${mobileOpen ? 'is-open' : ''}`} aria-label="Main navigation">
           <a href="#top" onClick={() => setMobileOpen(false)}>Home</a>
           <a href="#products" onClick={() => setMobileOpen(false)}>Products</a>
@@ -83,7 +83,7 @@ export default function Page() {
 
       <section className="faq-section section-wrap"><div className="section-heading"><div><p className="eyebrow">A FEW GOOD QUESTIONS</p><h2>FAQ</h2></div><p>Everything you need to know before beginning your next ritual.</p></div><div className="faq-list">{faqs.map(([question, answer], index) => <div className="faq-item" key={question}><button aria-expanded={openFaq === index} onClick={() => setOpenFaq(openFaq === index ? null : index)}><span>{question}</span><b>{openFaq === index ? '−' : '+'}</b></button>{openFaq === index && <p>{answer}</p>}</div>)}</div></section>
 
-      <section className="contact-section" id="contact"><div className="section-wrap contact-inner"><div><p className="eyebrow">LET'S KEEP IN TOUCH</p><h2>Your next ritual<br /><em>starts here.</em></h2></div><div className="contact-details"><p>For questions, recommendations or WhatsApp orders, we would love to hear from you.</p><a href="mailto:hello@leroyal.pk">hello@leroyal.pk <span>↗</span></a><a href="https://wa.me/923000000000">WhatsApp us <span>↗</span></a><div className="socials"><a href="#contact">Instagram</a><a href="#contact">Facebook</a></div></div></div></section>
+      <section className="contact-section" id="contact"><div className="section-wrap contact-inner"><div><p className="eyebrow">LET'S KEEP IN TOUCH</p><h2>Your next ritual<br /><em>starts here.</em></h2></div><div className="contact-details"><p>For questions, recommendations or WhatsApp orders, we would love to hear from you.</p><a href="mailto:hello@leroyal.pk">hello@leroyal.pk <span>↗</span></a><a href="https://wa.me/923334515719" target="_blank" rel="noreferrer">WhatsApp us <span>↗</span></a><div className="socials"><a href="#contact">Instagram</a><a href="#contact">Facebook</a></div></div></div></section>
 
       <footer><div className="footer-top"><a className="brand brand-light" href="#top"><span>LE ROYAL</span><small>HANDMADE SOAP</small></a><p>Refined care for a fresher<br />everyday ritual.</p><div className="footer-links"><a href="#products">Products</a><a href="#about">About</a><a href="#contact">Contact</a></div></div><div className="footer-bottom"><span>© {new Date().getFullYear()} Le Royal. All rights reserved.</span><span>Made with care, for everyday.</span></div></footer>
 
