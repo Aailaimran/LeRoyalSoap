@@ -12,12 +12,11 @@ export default function ProductDetail({ product }: { product: Product }) {
   const tabs = ['Description', 'Benefits', 'How to Use', 'Ingredients', 'Care']
 
   function addToCart() {
-    const current = JSON.parse(window.localStorage.getItem('leroyal_cart') || '[]') as { id: string; quantity: number }[]
-    const existing = current.find((item) => item.id === product.id)
-    const next = existing ? current.map((item) => item.id === product.id ? { ...item, quantity: Math.min(product.stock, item.quantity + quantity) } : item) : [...current, { id: product.id, quantity }]
+    const current = JSON.parse(window.localStorage.getItem('leroyal_cart') || '[]') as { product: Product; quantity: number }[]
+    const existing = current.find((item) => item.product.id === product.id)
+    const next = existing ? current.map((item) => item.product.id === product.id ? { ...item, product, quantity: Math.min(product.stock, item.quantity + quantity) } : item) : [...current, { product, quantity }]
     window.localStorage.setItem('leroyal_cart', JSON.stringify(next))
-    setCartMessage(`${product.displayName} added to your cart.`)
-    window.setTimeout(() => setCartMessage(''), 2600)
+    window.location.assign('/?cart=open')
   }
 
   const content = activeTab === 'Description' ? <p>{product.longDescription}</p> : activeTab === 'Benefits' ? <ul>{product.benefits.map((benefit) => <li key={benefit}>{benefit}</li>)}</ul> : activeTab === 'How to Use' ? <p>{product.usage || genericUsage}</p> : activeTab === 'Ingredients' ? <p>{product.ingredients || 'Full ingredient list coming soon.'}</p> : <p>{careCopy}</p>
