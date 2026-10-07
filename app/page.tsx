@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
-import { getProductUrl, money, products, type Product, whatsappUrl } from '@/lib/products'
+import { getProductUrl, money, products, type Product } from '@/lib/products'
 
 const faqs = [
   ['How do I choose the right soap?', 'Start with the ritual you want to create. Charcoal and neem feel fresh and purifying, while rice, baby and flax blends are gentle everyday choices.'],
@@ -11,7 +11,9 @@ const faqs = [
   ['Can I order through WhatsApp?', 'Yes. Send us your chosen soaps and delivery details through WhatsApp and our team will help you complete the order.'],
 ]
 
-type CartItem = { product: Product; quantity: number }
+type CartItem = { product: Product; quantity: number; bundleProducts?: Product[] }
+
+const bundleProduct: Product = { ...products[0], id: 'bundle-3', slug: 'bundle-3', displayName: 'Build Your Own Trio', category: 'Soap Bundle', description: 'Choose any three soaps from the collection.', longDescription: 'A flexible trio of any three Le Royal soaps.', price: 1300 }
 
 export default function Page() {
   const [cart, setCart] = useState<CartItem[]>([])
@@ -22,6 +24,7 @@ export default function Page() {
   const [checkoutOpen, setCheckoutOpen] = useState(false)
   const [orderSubmitted, setOrderSubmitted] = useState(false)
   const [cartHydrated, setCartHydrated] = useState(false)
+  const [bundleSelection, setBundleSelection] = useState<string[]>([])
 
   useEffect(() => {
     const saved = window.localStorage.getItem('leroyal_cart')
@@ -32,6 +35,9 @@ export default function Page() {
     try {
       const parsed = JSON.parse(saved) as CartItem[]
       const validCart = parsed.flatMap((item) => {
+        if (item?.product?.id === bundleProduct.id && Array.isArray(item.bundleProducts) && item.bundleProducts.length === 3) {
+          return [{ product: bundleProduct, quantity: 1, bundleProducts: item.bundleProducts }]
+        }
         const product = products.find((candidate) => candidate.id === item?.product?.id)
         return product && Number.isInteger(item.quantity) && item.quantity > 0
           ? [{ product, quantity: Math.min(product.stock, item.quantity) }]
@@ -66,6 +72,20 @@ export default function Page() {
     window.setTimeout(() => setToast(''), 2600)
   }
 
+  function addBundleToCart() {
+    const selectedProducts = bundleSelection.map((id) => products.find((product) => product.id === id)).filter((product): product is Product => Boolean(product))
+    if (selectedProducts.length !== 3) return
+    setCart((current) => [...current, { product: bundleProduct, quantity: 1, bundleProducts: selectedProducts }])
+    setBundleSelection([])
+    setToast('Your custom trio was added to your ritual')
+    setDrawerOpen(true)
+    window.setTimeout(() => setToast(''), 2600)
+  }
+
+  function toggleBundleProduct(id: string) {
+    setBundleSelection((current) => current.includes(id) ? current.filter((item) => item !== id) : current.length < 3 ? [...current, id] : current)
+  }
+
   function changeQuantity(id: string, delta: number) {
     setCart((current) => current.flatMap((item) => item.product.id === id ? (item.quantity + delta > 0 ? [{ ...item, quantity: item.quantity + delta }] : []) : [item]))
   }
@@ -89,12 +109,14 @@ export default function Page() {
 
       <section className="hero" id="top">
         <div className="hero-copy"><p className="eyebrow">THE EVERYDAY RITUAL, REFINED</p><h1>Care that feels<br /><em>beautifully</em> natural.</h1><p className="hero-text">Ingredient-inspired handmade soaps created to make your everyday cleanse feel a little more considered.</p><a className="button button-dark" href="#products">Explore the collection <span>↗</span></a><div className="hero-note"><span className="seal">✦</span><span>Thoughtfully made<br />for daily use</span></div></div>
-        <div className="hero-art"><div className="art-glow" /><div className="hero-soap hero-soap-back" /><div className="hero-soap hero-soap-front"><span>LE<br />ROYAL</span></div><div className="hero-leaf leaf-one" /><div className="hero-leaf leaf-two" /><p>CHARCOAL · RICE · NEEM · COFFEE</p></div>
+        <div className="hero-art"><img src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Screenshot%202026-10-05%20233632-swP9scfAvU9b7sGeqDGazzLK3zy5m7.png" alt="Le Royal soaps surrounded by botanical ingredients" /></div>
       </section>
 
       <section className="marquee" aria-label="Brand values"><span>SMALL BATCH</span><i>✦</i><span>EVERYDAY CARE</span><i>✦</i><span>INGREDIENT INSPIRED</span><i>✦</i><span>SMALL BATCH</span></section>
 
       <section className="collection section-wrap" id="products"><div className="section-heading"><div><p className="eyebrow">A SOAP FOR EVERY RITUAL</p><h2>Our collection</h2></div><p>Discover considered blends for clean, comfortable skin and a fresher everyday start.</p></div><div className="product-grid">{products.map((product, index) => <article className="product-card" key={product.id}><a className={`product-image ${product.tone}`} href={getProductUrl(product)} aria-label={`View details for ${product.displayName}`}><img src={product.image} alt={`${product.displayName} handmade soap`} loading={index > 2 ? 'lazy' : 'eager'} /><span className="product-number">0{index + 1}</span></a><div className="product-info"><p className="product-category">{product.category}</p><h3>{product.displayName}</h3><p>{product.description}</p><div className="product-footer"><strong>{money(product.price)}</strong><button onClick={() => addToCart(product)}>Add to cart <span>+</span></button></div></div></article>)}</div></section>
+
+      <section className="bundle-section section-wrap" id="bundle"><div className="section-heading"><div><p className="eyebrow">MAKE IT YOURS</p><h2>Build a trio.</h2></div><p>Choose any three soaps from our collection and enjoy the set for Rs. 1,300.</p></div><div className="bundle-picker"><div className="bundle-options">{products.map((product) => <button className={`bundle-option ${bundleSelection.includes(product.id) ? 'is-selected' : ''}`} key={product.id} onClick={() => toggleBundleProduct(product.id)} aria-pressed={bundleSelection.includes(product.id)}><img src={product.image} alt="" /><span>{product.displayName}</span><b>{bundleSelection.includes(product.id) ? '✓' : '+'}</b></button>)}</div><div className="bundle-action"><span>{bundleSelection.length} of 3 selected</span><button className="button button-dark" disabled={bundleSelection.length !== 3} onClick={addBundleToCart}>Add trio · Rs. 1,300 <span>↗</span></button></div></div></section>
 
       <section className="why-section"><div className="section-wrap"><div className="section-heading centered"><div><p className="eyebrow">THE LE ROYAL WAY</p><h2>Simple care, <em>well considered.</em></h2></div></div><div className="benefit-grid"><div><span>01</span><h3>Thoughtfully selected</h3><p>Ingredient-inspired blends chosen for a calm, comfortable cleanse.</p></div><div><span>02</span><h3>Everyday gentle care</h3><p>Good soap should be a pleasure to use, morning after morning.</p></div><div><span>03</span><h3>Distinctive rituals</h3><p>From charcoal to citrus, find a bar with its own character.</p></div><div><span>04</span><h3>Fresh experience</h3><p>Clean, refined and made to leave you feeling renewed.</p></div></div></div></section>
 
@@ -108,7 +130,7 @@ export default function Page() {
 
       {toast && <div className="toast" role="status">{toast}<span>✓</span></div>}
       {drawerOpen && <div className="drawer-overlay" onClick={() => setDrawerOpen(false)} />}
-      <aside className={`cart-drawer ${drawerOpen ? 'is-open' : ''}`} aria-label="Shopping cart"><div className="drawer-header"><div><p className="eyebrow">YOUR SELECTION</p><h2>Your cart <span>({cartCount})</span></h2></div><button onClick={() => setDrawerOpen(false)} aria-label="Close cart">×</button></div>{cart.length === 0 ? <div className="empty-cart"><div className="empty-mark">✦</div><h3>Your cart is empty.</h3><p>Find a soap to make your next ritual feel special.</p><button className="button button-dark" onClick={() => { setDrawerOpen(false); document.querySelector('#products')?.scrollIntoView({ behavior: 'smooth' }) }}>Continue shopping</button></div> : <><div className="cart-items">{cart.map(({ product, quantity }) => <div className="cart-item" key={product.id}><img src={product.image} alt="" /><div><h3>{product.displayName}</h3><p>{money(product.price)}</p><div className="stepper"><button onClick={() => changeQuantity(product.id, -1)} aria-label={`Decrease ${product.displayName}`}>−</button><span>{quantity}</span><button onClick={() => changeQuantity(product.id, 1)} aria-label={`Increase ${product.displayName}`}>+</button></div></div><strong>{money(product.price * quantity)}</strong></div>)}</div><div className="drawer-footer"><div><span>Subtotal</span><strong>{money(subtotal)}</strong></div><p>{shipping === 0 ? 'Complimentary delivery applied.' : 'Delivery calculated at checkout.'}</p><button className="button button-dark checkout-button" onClick={() => { setDrawerOpen(false); setCheckoutOpen(true) }}>Proceed to checkout <span>↗</span></button><button className="clear-button" onClick={() => setCart([])}>Clear cart</button></div></>}</aside>
+      <aside className={`cart-drawer ${drawerOpen ? 'is-open' : ''}`} aria-label="Shopping cart"><div className="drawer-header"><div><p className="eyebrow">YOUR SELECTION</p><h2>Your cart <span>({cartCount})</span></h2></div><button onClick={() => setDrawerOpen(false)} aria-label="Close cart">×</button></div>{cart.length === 0 ? <div className="empty-cart"><div className="empty-mark">✦</div><h3>Your cart is empty.</h3><p>Find a soap to make your next ritual feel special.</p><button className="button button-dark" onClick={() => { setDrawerOpen(false); document.querySelector('#products')?.scrollIntoView({ behavior: 'smooth' }) }}>Continue shopping</button></div> : <><div className="cart-items">{cart.map(({ product, quantity, bundleProducts }) => <div className="cart-item" key={product.id}><img src={product.image} alt="" /><div><h3>{product.displayName}</h3><p>{bundleProducts ? bundleProducts.map((item) => item.displayName).join(' · ') : money(product.price)}</p><div className="stepper"><button onClick={() => changeQuantity(product.id, -1)} aria-label={`Decrease ${product.displayName}`}>−</button><span>{quantity}</span><button onClick={() => changeQuantity(product.id, 1)} aria-label={`Increase ${product.displayName}`}>+</button></div></div><strong>{money(product.price * quantity)}</strong></div>)}</div><div className="drawer-footer"><div><span>Subtotal</span><strong>{money(subtotal)}</strong></div><p>{shipping === 0 ? 'Complimentary delivery applied.' : 'Delivery calculated at checkout.'}</p><button className="button button-dark checkout-button" onClick={() => { setDrawerOpen(false); setCheckoutOpen(true) }}>Proceed to checkout <span>↗</span></button><button className="clear-button" onClick={() => setCart([])}>Clear cart</button></div></>}</aside>
       {checkoutOpen && <div className="checkout-overlay" role="dialog" aria-modal="true" aria-labelledby="checkout-title"><div className="checkout-modal"><button className="checkout-close" onClick={() => setCheckoutOpen(false)} aria-label="Close checkout">×</button>{orderSubmitted ? <div className="checkout-success" role="status" aria-live="polite"><p className="eyebrow">ORDER RECEIVED</p><h2 id="checkout-title">Thank you for choosing Le Royal.</h2><p>Your order has been placed successfully. We will contact you shortly to confirm delivery and Cash on Delivery details.</p><button className="button button-dark" onClick={() => { setCheckoutOpen(false); setOrderSubmitted(false); setCart([]) }}>Back to home</button></div> : <form onSubmit={(event) => { event.preventDefault(); setOrderSubmitted(true); setToast('Order placed successfully.') }}><p className="eyebrow">COMPLETE YOUR ORDER</p><h2 id="checkout-title">Your ritual, delivered.</h2><div className="checkout-fields"><label>Full name<input required name="name" /></label><label>Email<input required type="email" name="email" /></label><label>Phone<input required type="tel" name="phone" /></label><label>City<input required name="city" /></label><label className="field-wide">Full address<textarea required name="address" rows={3} /></label><label>Postal code<input name="postalCode" /></label><label>Payment method<select name="payment"><option>Cash on Delivery</option></select></label></div><div className="checkout-summary"><span>{cartCount} item{cartCount === 1 ? '' : 's'}</span><strong>{money(subtotal + shipping)}</strong></div><button className="button button-dark" type="submit">Place order <span>↗</span></button><p className="checkout-note">Order requests are confirmed by WhatsApp until email service is connected.</p></form>}</div></div>}
     </main>
   )
