@@ -5,23 +5,10 @@ import './globals.css'
 export const metadata: Metadata = {
   title: 'Le Royal | Premium Handmade Soaps',
   description: "Discover Le Royal's ingredient-inspired handmade soaps designed for fresh, refined everyday cleansing.",
-  generator: 'v0.app',
   icons: {
-    icon: [
-      {
-        url: '/icon-light-32x32.png',
-        media: '(prefers-color-scheme: light)',
-      },
-      {
-        url: '/icon-dark-32x32.png',
-        media: '(prefers-color-scheme: dark)',
-      },
-      {
-        url: '/icon.svg',
-        type: 'image/svg+xml',
-      },
-    ],
-    apple: '/apple-icon.png',
+    icon: '/logo.jpeg',
+    shortcut: '/logo.jpeg',
+    apple: '/logo.jpeg',
   },
 }
 
